@@ -38,6 +38,7 @@ export default function LoginPage() {
         title: "Login successful",
         description: "You have been logged in successfully",
       })
+       localStorage.setItem("userId", response.userId.toString())
 
       router.push("/dashboard")
       console.log("Redirecting to dashboard")
