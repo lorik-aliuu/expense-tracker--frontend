@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { MainNav } from "@/components/main-nav"
@@ -14,33 +13,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem("token")
-
-    // For demo purposes, we'll set a small delay to simulate checking auth
-    const timer = setTimeout(() => {
-      if (!token) {
-        router.push("/login")
-      } else {
-        setIsLoading(false)
-      }
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [router])
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      </div>
-    )
-  }
-
+  // 👇 No auth check anymore
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b bg-background">
