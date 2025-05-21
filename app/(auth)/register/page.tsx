@@ -7,7 +7,14 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { createUser } from "@/lib/api/users"
 import { useToast } from "@/hooks/use-toast"
 
@@ -18,7 +25,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [overAllBudget, setOverAllBudget] = useState("")
 
-  const [emailError, setEmailError] = useState<string | null>(null) 
+  const [emailError, setEmailError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
@@ -26,7 +33,6 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    
     setEmailError(null)
 
     if (password !== confirmPassword) {
@@ -38,19 +44,39 @@ export default function RegisterPage() {
       return
     }
 
+    const parsedBudget = Number.parseFloat(overAllBudget)
+    if (isNaN(parsedBudget) || parsedBudget < 0) {
+      toast({
+        title: "Invalid budget",
+        description: "Overall budget must be zero or positive",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      await createUser({ name, email, password, overAllBudget: Number.parseFloat(overAllBudget) })
+      const response = await createUser({
+        name,
+        email,
+        password,
+        overAllBudget: parsedBudget,
+      })
+
+      if (response?.id) {
+        localStorage.setItem("userId", response.id.toString())
+      } else {
+        console.warn("User ID not returned after registration")
+      }
 
       toast({
         title: "Registration successful",
         description: "Your account has been created successfully",
       })
 
-      router.push("/login")
+      router.push("/dashboard") // or "/login" if you prefer to log in afterward
     } catch (error: any) {
-     
       if (error?.message?.toLowerCase().includes("email")) {
         setEmailError(error.message)
       }
