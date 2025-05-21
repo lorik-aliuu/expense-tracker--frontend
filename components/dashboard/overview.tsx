@@ -56,16 +56,16 @@ export function Overview({ expenses, categories }: OverviewProps) {
           groupByFormat = "yyyy-MM-dd"
       }
 
-      // Filter expenses by date range
+    
       const filteredExpenses = expenses.filter((expense) => {
         const expenseDate = new Date(expense.date)
         return expenseDate >= startDate
       })
 
-      // Group expenses by date
+     
       const groupedExpenses: Record<string, number> = {}
 
-      // Initialize all dates in the range with zero values
+    
       if (timePeriod === "week") {
         for (let i = 0; i < 7; i++) {
           const date = addDays(startDate, i)
@@ -89,15 +89,15 @@ export function Overview({ expenses, categories }: OverviewProps) {
         }
       }
 
-      // Sum expenses for each date
+      
       filteredExpenses.forEach((expense) => {
         const expenseDate = new Date(expense.date)
         const dateKey = format(expenseDate, groupByFormat)
 
         if (groupedExpenses[dateKey] !== undefined) {
-          groupedExpenses[dateKey] += expense.amount
+          groupedExpenses[dateKey] += expense.amount ?? 0
         } else {
-          groupedExpenses[dateKey] = expense.amount
+          groupedExpenses[dateKey] = expense.amount ?? 0
         }
       })
 

@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,13 +13,11 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
-import type { Category } from "@/lib/types/category"
 import type { Expense } from "@/lib/types/expense"
 import { updateExpense } from "@/lib/api/expenses"
 import { useToast } from "@/hooks/use-toast"
@@ -29,23 +26,20 @@ interface EditExpenseDialogProps {
   expense: Expense
   open: boolean
   onOpenChange: (open: boolean) => void
-  categories: Category[]
   onUpdate: (expense: Expense) => void
 }
 
-export function EditExpenseDialog({ expense, open, onOpenChange, categories, onUpdate }: EditExpenseDialogProps) {
-  const [description, setDescription] = useState(expense.description)
-  const [amount, setAmount] = useState(expense.amount.toString())
-  const [categoryId, setCategoryId] = useState(expense.categoryId)
+export function EditExpenseDialog({ expense, open, onOpenChange, onUpdate }: EditExpenseDialogProps) {
+  const [description, setDescription] = useState(expense.description ?? "")
+  const [amount, setAmount] = useState(expense.amount !== null ? expense.amount.toString() : "")
   const [date, setDate] = useState<Date>(new Date(expense.date))
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
     if (open) {
-      setDescription(expense.description)
-      setAmount(expense.amount.toString())
-      setCategoryId(expense.categoryId)
+      setDescription(expense.description ?? "")
+      setAmount(expense.amount !== null ? expense.amount.toString() : "")
       setDate(new Date(expense.date))
     }
   }, [expense, open])
@@ -53,7 +47,7 @@ export function EditExpenseDialog({ expense, open, onOpenChange, categories, onU
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!description || !amount || !categoryId || !date) {
+    if (!amount || !date) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
@@ -65,12 +59,11 @@ export function EditExpenseDialog({ expense, open, onOpenChange, categories, onU
     setIsSubmitting(true)
 
     try {
-      const updatedExpense = await updateExpense(expense.id, {
+      const updatedExpense = await updateExpense(expense.id.toString(), {
         ...expense,
-        description,
+        description: description === "" ? null : description,
         amount: Number.parseFloat(amount),
         date: date.toISOString(),
-        categoryId,
       })
 
       onUpdate(updatedExpense)
@@ -102,7 +95,12 @@ export function EditExpenseDialog({ expense, open, onOpenChange, categories, onU
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
-              <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
+              <Input
+                id="description"
+                value={description ?? ""}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Description (optional)"
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="amount">Amount</Label>
@@ -113,22 +111,8 @@ export function EditExpenseDialog({ expense, open, onOpenChange, categories, onU
                 min="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                required
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="category">Category</Label>
-              <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="date">Date</Label>

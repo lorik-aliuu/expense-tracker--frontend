@@ -31,9 +31,9 @@ import {
 
 interface ExpenseListProps {
   expenses: Expense[]
-  categories: Category[]
+  categories: Category[]  // You can remove categories prop if unused elsewhere
   isLoading: boolean
-  onDelete: (id: string) => void
+  onDelete: (id: number) => void
   onUpdate: (expense: Expense) => void
 }
 
@@ -41,35 +41,30 @@ export function ExpenseList({ expenses, categories, isLoading, onDelete, onUpdat
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null)
+  const [expenseToDelete, setExpenseToDelete] = useState<number | null>(null)
   const { toast } = useToast()
-
-  const getCategoryName = (categoryId: string) => {
-    const category = categories.find((cat) => cat.id === categoryId)
-    return category ? category.name : "Uncategorized"
-  }
 
   const handleEdit = (expense: Expense) => {
     setEditingExpense(expense)
     setIsEditDialogOpen(true)
   }
 
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = (id: number) => {
     setExpenseToDelete(id)
     setIsDeleteDialogOpen(true)
   }
 
   const handleDeleteConfirm = async () => {
-    if (!expenseToDelete) return
+    if (expenseToDelete === null) return
 
     try {
-      await deleteExpense(expenseToDelete)
+      await deleteExpense(expenseToDelete.toString())
       onDelete(expenseToDelete)
       toast({
         title: "Expense deleted",
         description: "The expense has been deleted successfully",
       })
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to delete the expense",
@@ -88,7 +83,6 @@ export function ExpenseList({ expenses, categories, isLoading, onDelete, onUpdat
           <TableHeader>
             <TableRow>
               <TableHead>Description</TableHead>
-              <TableHead>Category</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead></TableHead>
@@ -101,9 +95,6 @@ export function ExpenseList({ expenses, categories, isLoading, onDelete, onUpdat
                 <TableRow key={i}>
                   <TableCell>
                     <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
                   </TableCell>
                   <TableCell>
                     <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
@@ -138,7 +129,6 @@ export function ExpenseList({ expenses, categories, isLoading, onDelete, onUpdat
           <TableHeader>
             <TableRow>
               <TableHead>Description</TableHead>
-              <TableHead>Category</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead></TableHead>
@@ -146,11 +136,10 @@ export function ExpenseList({ expenses, categories, isLoading, onDelete, onUpdat
           </TableHeader>
           <TableBody>
             {expenses.map((expense) => (
-              <TableRow key={expense.id}>
-                <TableCell className="font-medium">{expense.description}</TableCell>
-                <TableCell>{getCategoryName(expense.categoryId)}</TableCell>
+              <TableRow key={String(expense.id)}>
+                <TableCell className="font-medium">{expense.description || "(No description)"}</TableCell>
                 <TableCell>{formatDate(expense.date)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
+                <TableCell className="text-right">{formatCurrency(expense.amount ?? 0)}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -182,7 +171,6 @@ export function ExpenseList({ expenses, categories, isLoading, onDelete, onUpdat
       {editingExpense && (
         <EditExpenseDialog
           expense={editingExpense}
-          categories={categories}
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           onUpdate={onUpdate}

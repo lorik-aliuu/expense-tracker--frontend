@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -48,12 +46,25 @@ export function AddCategoryDialog({ open, onOpenChange, onAddCategory }: AddCate
       return
     }
 
+    const userIdStr = localStorage.getItem("userId")
+    const userId = userIdStr ? parseInt(userIdStr, 10) : null
+
+    if (!userId) {
+      toast({
+        title: "User not logged in",
+        description: "Please log in to add a category",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
       const newCategory = await createCategory({
         name,
         description,
+        userId,
       })
 
       onAddCategory(newCategory)

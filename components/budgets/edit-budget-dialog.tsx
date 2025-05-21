@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,7 +13,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { CategoryBudget } from "@/lib/types/category-budget"
 import type { Category } from "@/lib/types/category"
 import { updateCategoryBudget } from "@/lib/api/category-budgets"
@@ -29,8 +27,7 @@ interface EditBudgetDialogProps {
 }
 
 export function EditBudgetDialog({ budget, categories, open, onOpenChange, onUpdate }: EditBudgetDialogProps) {
-  const [amount, setAmount] = useState(budget.amount.toString())
-  const [period, setPeriod] = useState(budget.period || "Monthly")
+  const [budgetValue, setBudgetValue] = useState(budget.budget.toString())
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
@@ -38,17 +35,16 @@ export function EditBudgetDialog({ budget, categories, open, onOpenChange, onUpd
 
   useEffect(() => {
     if (open) {
-      setAmount(budget.amount.toString())
-      setPeriod(budget.period || "Monthly")
+      setBudgetValue(budget.budget.toString())
     }
   }, [budget, open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!amount) {
+    if (!budgetValue) {
       toast({
-        title: "Missing amount",
+        title: "Missing budget",
         description: "Please provide a budget amount",
         variant: "destructive",
       })
@@ -58,10 +54,9 @@ export function EditBudgetDialog({ budget, categories, open, onOpenChange, onUpd
     setIsSubmitting(true)
 
     try {
-      const updatedBudget = await updateCategoryBudget(budget.id, {
-        ...budget,
-        amount: Number.parseFloat(amount),
-        period,
+      // Send only budget as per backend contract
+      const updatedBudget = await updateCategoryBudget(budget.id.toString(), {
+        budget: Number.parseFloat(budgetValue),
       })
 
       onUpdate(updatedBudget)
@@ -96,29 +91,15 @@ export function EditBudgetDialog({ budget, categories, open, onOpenChange, onUpd
               <Input id="category" value={category?.name || "Unknown Category"} disabled />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="amount">Budget Amount</Label>
+              <Label htmlFor="budget">Budget Amount</Label>
               <Input
-                id="amount"
+                id="budget"
                 type="number"
                 step="0.01"
                 min="0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                value={budgetValue}
+                onChange={(e) => setBudgetValue(e.target.value)}
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="period">Period</Label>
-              <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger id="period">
-                  <SelectValue placeholder="Select a period" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Daily">Daily</SelectItem>
-                  <SelectItem value="Weekly">Weekly</SelectItem>
-                  <SelectItem value="Monthly">Monthly</SelectItem>
-                  <SelectItem value="Yearly">Yearly</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
           <DialogFooter>

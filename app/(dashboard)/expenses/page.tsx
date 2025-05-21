@@ -49,7 +49,7 @@ export default function ExpensesPage() {
 
     // Filter by category
     if (selectedCategoryId) {
-      filtered = filtered.filter((expense) => expense.categoryId === selectedCategoryId)
+      filtered = filtered.filter((expense) => expense.categoryId === Number(selectedCategoryId))
     }
 
     // Filter by date range
@@ -74,7 +74,7 @@ export default function ExpensesPage() {
     setExpenses((prev) => [newExpense, ...prev])
   }
 
-  const handleDeleteExpense = (id: string) => {
+  const handleDeleteExpense = (id: number) => {
     setExpenses((prev) => prev.filter((expense) => expense.id !== id))
   }
 

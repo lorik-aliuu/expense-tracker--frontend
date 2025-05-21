@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -37,7 +36,6 @@ export function AddBudgetDialog({
 }: AddBudgetDialogProps) {
   const [categoryId, setCategoryId] = useState("")
   const [amount, setAmount] = useState("")
-  const [period, setPeriod] = useState("Monthly")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
@@ -49,7 +47,6 @@ export function AddBudgetDialog({
   const resetForm = () => {
     setCategoryId("")
     setAmount("")
-    setPeriod("Monthly")
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,14 +65,12 @@ export function AddBudgetDialog({
 
     try {
       const userId = localStorage.getItem("userId")
-      if (!userId) throw new Error("User ID not found")
+      if (!userId || isNaN(Number(userId))) throw new Error("User ID is invalid")
 
       const newBudget = await createCategoryBudget({
-        categoryId,
-        userId,
-        amount: Number.parseFloat(amount),
-        period,
-        spent: 0,
+        userId: Number(userId),
+        categoryId: Number(categoryId),
+        budget: parseFloat(amount), // property matches backend DTO
       })
 
       onAddBudget(newBudget)
@@ -115,7 +110,7 @@ export function AddBudgetDialog({
                 <SelectContent>
                   {availableCategories.length > 0 ? (
                     availableCategories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
+                      <SelectItem key={category.id} value={category.id.toString()}>
                         {category.name}
                       </SelectItem>
                     ))
@@ -143,20 +138,6 @@ export function AddBudgetDialog({
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="period">Period</Label>
-              <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger id="period">
-                  <SelectValue placeholder="Select a period" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Daily">Daily</SelectItem>
-                  <SelectItem value="Weekly">Weekly</SelectItem>
-                  <SelectItem value="Monthly">Monthly</SelectItem>
-                  <SelectItem value="Yearly">Yearly</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
           <DialogFooter>

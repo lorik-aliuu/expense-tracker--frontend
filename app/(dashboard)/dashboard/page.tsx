@@ -10,9 +10,11 @@ import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton"
 import { getUserExpenses } from "@/lib/api/expenses"
 import { getUserCategories } from "@/lib/api/categories"
 import { getUserCategoryBudgets } from "@/lib/api/category-budgets"
+import { getUserById } from "@/lib/api/users"
 import type { Expense } from "@/lib/types/expense"
 import type { Category } from "@/lib/types/category"
 import type { CategoryBudget } from "@/lib/types/category-budget"
+import type { User } from "@/lib/types/user"
 
 export default function DashboardPage() {
   const [expenses, setExpenses] = useState<Expense[]>([])
@@ -28,22 +30,23 @@ export default function DashboardPage() {
         const userId = localStorage.getItem("userId")
         if (!userId) return
 
-        const [expensesData, categoriesData, budgetsData] = await Promise.all([
+        const [expensesData, categoriesData, budgetsData, userData] = await Promise.all([
           getUserExpenses(userId),
           getUserCategories(),
-          getUserCategoryBudgets(userId),
+          getUserCategoryBudgets(Number(userId)),
+          getUserById(userId),
         ])
 
-        // Sort expenses by date (newest first)
-        const sortedExpenses = [...expensesData].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        const sortedExpenses = [...expensesData].sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        )
 
         setExpenses(sortedExpenses)
         setCategories(categoriesData)
         setBudgets(budgetsData)
 
-        // Calculate totals
-        const spent = expensesData.reduce((sum, expense) => sum + expense.amount, 0)
-        const budget = budgetsData.reduce((sum, budget) => sum + budget.amount, 0)
+        const spent = expensesData.reduce((sum, expense) => sum + (expense.amount ?? 0), 0)
+        const budget = userData?.overAllBudget ?? 0
 
         setTotalSpent(spent)
         setTotalBudget(budget)
@@ -56,6 +59,11 @@ export default function DashboardPage() {
 
     fetchDashboardData()
   }, [])
+
+  // Llogaritja e shpenzimit më të madh
+  const largestExpense = expenses.length > 0
+    ? expenses.reduce((max, expense) => (expense.amount && expense.amount > max ? expense.amount : max), 0)
+    : 0
 
   if (isLoading) {
     return <DashboardSkeleton />
@@ -85,9 +93,11 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">{expenses.length} total transactions</p>
           </CardContent>
         </Card>
+
+        {/* Karta Largest Expense në vend të Total Budget */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
+            <CardTitle className="text-sm font-medium">Largest Expense</CardTitle>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -98,15 +108,17 @@ export default function DashboardPage() {
               strokeWidth="2"
               className="h-4 w-4 text-muted-foreground"
             >
-              <rect width="20" height="14" x="2" y="5" rx="2" />
-              <path d="M16 14V8M12 14V8M8 14V8" />
+              <path d="M9 21H7a4 4 0 0 1-4-4v-2" />
+              <circle cx="12" cy="7" r="4" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalBudget.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">{budgets.length} category budgets</p>
+            <div className="text-2xl font-bold">${largestExpense.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">Highest single expense</p>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Budget Remaining</CardTitle>
@@ -124,10 +136,10 @@ export default function DashboardPage() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${(totalBudget - totalSpent).toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">{totalSpent > totalBudget ? "Over budget" : "Under budget"}</p>
+             <div className="text-2xl font-bold">${((totalBudget || 0) - totalSpent).toFixed(2)}</div>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Categories</CardTitle>
@@ -152,6 +164,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>

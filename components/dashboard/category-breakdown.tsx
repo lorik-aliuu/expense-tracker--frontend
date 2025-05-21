@@ -14,7 +14,7 @@ interface CategoryBreakdownProps {
 }
 
 interface CategorySummary {
-  id: string
+  id: number
   name: string
   spent: number
   budget: number
@@ -22,13 +22,21 @@ interface CategorySummary {
 }
 
 export function CategoryBreakdown({ expenses, categories, budgets }: CategoryBreakdownProps) {
-  // Calculate spending by category
   const categorySummaries: CategorySummary[] = categories.map((category) => {
-    const categoryExpenses = expenses.filter((expense) => expense.categoryId === category.id)
-    const totalSpent = categoryExpenses.reduce((sum, expense) => sum + expense.amount, 0)
+    const categoryExpenses = expenses.filter(
+      (expense) =>
+        expense.categoryId !== null &&
+        expense.categoryId === category.id &&
+        expense.amount !== null
+    )
+
+    const totalSpent = categoryExpenses.reduce(
+      (sum, expense) => sum + (expense.amount ?? 0),
+      0
+    )
 
     const categoryBudget = budgets.find((budget) => budget.categoryId === category.id)
-    const budgetAmount = categoryBudget ? categoryBudget.amount : 0
+    const budgetAmount = categoryBudget ? categoryBudget.budget : 0
 
     const percentage = budgetAmount > 0 ? (totalSpent / budgetAmount) * 100 : 0
 
@@ -37,11 +45,10 @@ export function CategoryBreakdown({ expenses, categories, budgets }: CategoryBre
       name: category.name,
       spent: totalSpent,
       budget: budgetAmount,
-      percentage: Math.min(percentage, 100), // Cap at 100% for display purposes
+      percentage: Math.min(percentage, 100),
     }
   })
 
-  // Sort by percentage of budget used (descending)
   const sortedSummaries = [...categorySummaries].sort((a, b) => b.percentage - a.percentage)
 
   return (

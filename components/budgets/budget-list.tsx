@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
-import { Progress } from "@/components/ui/progress"
 import type { CategoryBudget } from "@/lib/types/category-budget"
 import type { Category } from "@/lib/types/category"
 import { EditBudgetDialog } from "./edit-budget-dialog"
@@ -34,7 +33,7 @@ interface BudgetListProps {
   budgets: CategoryBudget[]
   categories: Category[]
   isLoading: boolean
-  onDelete: (id: string) => void
+  onDelete: (id: number) => void
   onUpdate: (budget: CategoryBudget) => void
 }
 
@@ -42,10 +41,10 @@ export function BudgetList({ budgets, categories, isLoading, onDelete, onUpdate 
   const [editingBudget, setEditingBudget] = useState<CategoryBudget | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [budgetToDelete, setBudgetToDelete] = useState<string | null>(null)
+  const [budgetToDelete, setBudgetToDelete] = useState<number | null>(null)
   const { toast } = useToast()
 
-  const getCategoryName = (categoryId: string) => {
+  const getCategoryName = (categoryId: number) => {
     const category = categories.find((cat) => cat.id === categoryId)
     return category ? category.name : "Unknown Category"
   }
@@ -55,16 +54,16 @@ export function BudgetList({ budgets, categories, isLoading, onDelete, onUpdate 
     setIsEditDialogOpen(true)
   }
 
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = (id: number) => {
     setBudgetToDelete(id)
     setIsDeleteDialogOpen(true)
   }
 
   const handleDeleteConfirm = async () => {
-    if (!budgetToDelete) return
+    if (budgetToDelete === null) return
 
     try {
-      await deleteCategoryBudget(budgetToDelete)
+      await deleteCategoryBudget(budgetToDelete.toString())
       onDelete(budgetToDelete)
       toast({
         title: "Budget deleted",
@@ -89,9 +88,7 @@ export function BudgetList({ budgets, categories, isLoading, onDelete, onUpdate 
           <TableHeader>
             <TableRow>
               <TableHead>Category</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Period</TableHead>
-              <TableHead>Progress</TableHead>
+              <TableHead>Budget</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -105,12 +102,6 @@ export function BudgetList({ budgets, categories, isLoading, onDelete, onUpdate 
                   </TableCell>
                   <TableCell>
                     <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-4 w-48 bg-gray-200 dark:bg-gray-700 rounded"></div>
                   </TableCell>
                   <TableCell>
                     <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-full ml-auto"></div>
@@ -139,9 +130,7 @@ export function BudgetList({ budgets, categories, isLoading, onDelete, onUpdate 
           <TableHeader>
             <TableRow>
               <TableHead>Category</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Period</TableHead>
-              <TableHead>Progress</TableHead>
+              <TableHead>Budget</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -149,16 +138,7 @@ export function BudgetList({ budgets, categories, isLoading, onDelete, onUpdate 
             {budgets.map((budget) => (
               <TableRow key={budget.id}>
                 <TableCell className="font-medium">{getCategoryName(budget.categoryId)}</TableCell>
-                <TableCell>{formatCurrency(budget.amount)}</TableCell>
-                <TableCell>{budget.period || "Monthly"}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Progress value={budget.spent ? (budget.spent / budget.amount) * 100 : 0} className="h-2" />
-                    <span className="text-xs text-muted-foreground">
-                      {budget.spent ? `${((budget.spent / budget.amount) * 100).toFixed(0)}%` : "0%"}
-                    </span>
-                  </div>
-                </TableCell>
+                <TableCell>{formatCurrency(budget.budget)}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

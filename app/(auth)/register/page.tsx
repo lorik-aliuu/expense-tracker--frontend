@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -19,12 +18,16 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [overAllBudget, setOverAllBudget] = useState("")
 
+  const [emailError, setEmailError] = useState<string | null>(null) 
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    
+    setEmailError(null)
 
     if (password !== confirmPassword) {
       toast({
@@ -38,7 +41,6 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      // Fixed the parameter name to match the state variable name
       await createUser({ name, email, password, overAllBudget: Number.parseFloat(overAllBudget) })
 
       toast({
@@ -47,10 +49,15 @@ export default function RegisterPage() {
       })
 
       router.push("/login")
-    } catch (error) {
+    } catch (error: any) {
+     
+      if (error?.message?.toLowerCase().includes("email")) {
+        setEmailError(error.message)
+      }
+
       toast({
         title: "Registration failed",
-        description: "There was an error creating your account",
+        description: error?.message || "There was an error creating your account",
         variant: "destructive",
       })
     } finally {
@@ -69,7 +76,13 @@ export default function RegisterPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
+              <Input
+                id="name"
+                placeholder="John Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -80,7 +93,9 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className={emailError ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}
               />
+              {emailError && <p className="text-red-600 text-sm mt-1">{emailError}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="budget">Overall Budget</Label>

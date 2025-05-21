@@ -55,7 +55,7 @@ export function CategoryList({ categories, isLoading, onDelete, onUpdate }: Cate
     if (!categoryToDelete) return
 
     try {
-      await deleteCategory(categoryToDelete)
+      await deleteCategory(Number(categoryToDelete))
       onDelete(categoryToDelete)
       toast({
         title: "Category deleted",
@@ -127,6 +127,7 @@ export function CategoryList({ categories, isLoading, onDelete, onUpdate }: Cate
             </TableRow>
           </TableHeader>
           <TableBody>
+            
             {categories.map((category) => (
               <TableRow key={category.id}>
                 <TableCell className="font-medium">{category.name}</TableCell>
@@ -146,7 +147,7 @@ export function CategoryList({ categories, isLoading, onDelete, onUpdate }: Cate
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDeleteClick(category.id)}>
+                      <DropdownMenuItem onClick={() => handleDeleteClick(String(category.id))}>
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
                       </DropdownMenuItem>

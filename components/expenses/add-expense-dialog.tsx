@@ -50,10 +50,20 @@ export function AddExpenseDialog({ open, onOpenChange, categories, onAddExpense 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!description || !amount || !categoryId || !date) {
+    if (!description.trim() || !amount || !categoryId || !date) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const parsedAmount = Number.parseFloat(amount)
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      toast({
+        title: "Invalid amount",
+        description: "Please enter a valid amount greater than zero",
         variant: "destructive",
       })
       return
@@ -66,11 +76,9 @@ export function AddExpenseDialog({ open, onOpenChange, categories, onAddExpense 
       if (!userId) throw new Error("User ID not found")
 
       const newExpense = await createExpense(userId, categoryId, {
-        description,
-        amount: Number.parseFloat(amount),
+        description: description.trim(),
+        amount: parsedAmount,
         date: date.toISOString(),
-        categoryId,
-        userId,
       })
 
       onAddExpense(newExpense)
@@ -81,12 +89,21 @@ export function AddExpenseDialog({ open, onOpenChange, categories, onAddExpense 
         title: "Expense added",
         description: "Your expense has been added successfully",
       })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add expense",
-        variant: "destructive",
-      })
+    } catch (error: any) {
+      let message = "Failed to add expense"
+
+  if (error instanceof Response) {
+    const data = await error.json()
+    if (data?.error) {
+      message = data.error
+    }
+  }
+
+  toast({
+    title: "Budget limit reached",
+    description: message,
+    variant: "destructive",
+  })
     } finally {
       setIsSubmitting(false)
     }
@@ -130,7 +147,7 @@ export function AddExpenseDialog({ open, onOpenChange, categories, onAddExpense 
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
+                    <SelectItem key={category.id} value={String(category.id)}>
                       {category.name}
                     </SelectItem>
                   ))}

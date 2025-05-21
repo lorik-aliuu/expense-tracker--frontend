@@ -16,6 +16,13 @@ export default function CategoriesPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        const userIdStr = localStorage.getItem("userId")
+        const userId = userIdStr ? parseInt(userIdStr, 10) : null
+
+        if (!userId) {
+          throw new Error("User ID not found")
+        }
+
         const categoriesData = await getUserCategories()
         setCategories(categoriesData)
       } catch (error) {
@@ -25,7 +32,10 @@ export default function CategoriesPage() {
       }
     }
 
-    fetchCategories()
+    // Sigurohu që kjo të thirret vetëm në browser
+    if (typeof window !== "undefined") {
+      fetchCategories()
+    }
   }, [])
 
   const handleAddCategory = (newCategory: Category) => {
@@ -33,11 +43,13 @@ export default function CategoriesPage() {
   }
 
   const handleDeleteCategory = (id: string) => {
-    setCategories((prev) => prev.filter((category) => category.id !== id))
+    setCategories((prev) => prev.filter((category) => String(category.id) !== id))
   }
 
   const handleUpdateCategory = (updatedCategory: Category) => {
-    setCategories((prev) => prev.map((category) => (category.id === updatedCategory.id ? updatedCategory : category)))
+    setCategories((prev) =>
+      prev.map((category) => (category.id === updatedCategory.id ? updatedCategory : category))
+    )
   }
 
   return (

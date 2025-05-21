@@ -1,7 +1,6 @@
 export interface Category {
-  id: string
+  id: number  
   name: string
   description?: string
-  createdAt?: string
-  updatedAt?: string
+   userId: number;
 }
